@@ -8,7 +8,7 @@ LexAI is an end-to-end Legal AI Assistant designed for Indian legal datasets. It
 - **Backend:** FastAPI
 - **Vector Database:** ChromaDB
 - **Embeddings:** `all-MiniLM-L6-v2` (SentenceTransformers)
-- **LLM:** OpenAI GPT (`gpt-3.5-turbo` by default)
+- **LLM:** Llama 3.1 via Groq (`llama-3.1-8b-instant`)
 - **OCR:** Tesseract OCR
 - **Speech-to-Text:** OpenAI Whisper
 
@@ -18,17 +18,17 @@ LexAI is an end-to-end Legal AI Assistant designed for Indian legal datasets. It
 2. **Node.js** (for frontend)
 3. **FFmpeg** (required by Whisper for audio processing)
 4. **Tesseract OCR** (required by pytesseract for image processing)
-5. **OpenAI API Key** (set as an environment variable)
+5. **Groq API Key** (set as an environment variable)
 
 ## Setup & Run Instructions
 
-### 1. Set OpenAI API Key
+### 1. Set Groq API Key
 
-Set your OpenAI API key in your terminal before running the backend:
+Set your Groq API key in your terminal before running the backend:
 
 **Windows (PowerShell):**
 ```powershell
-$env:OPENAI_API_KEY="your_actual_api_key_here"
+$env:GROQ_API_KEY="your_actual_api_key_here"
 ```
 
 ### 2. Backend Setup
