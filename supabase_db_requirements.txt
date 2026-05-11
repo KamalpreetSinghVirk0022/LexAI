@@ -1,0 +1,84 @@
+Supabase Database Requirements for Legal Chatbot
+=================================================
+
+This document outlines the database schema, tables, relationships, and keys required in Supabase to fully support the Legal RAG Chatbot application.
+
+1. General Requirements
+-----------------------
+- The database should leverage Supabase's built-in authentication (`auth.users`) to handle user signup, login, and secure session management.
+- Row Level Security (RLS) must be enabled on all tables in the `public` schema to ensure that users can only access their own data.
+- While the actual vector embeddings for the RAG architecture are stored in ChromaDB, Supabase will serve as the primary relational database for user management, conversational memory (chat history), and application state.
+
+2. Table Definitions
+--------------------
+
+### Table: `profiles`
+Stores extended user profile information. It has a 1-to-1 relationship with Supabase's built-in `auth.users` table.
+
+- Columns:
+  - `id` (UUID, Primary Key): References `auth.users(id)` with ON DELETE CASCADE.
+  - `email` (VARCHAR): User's email address.
+  - `full_name` (VARCHAR, Nullable): User's full name.
+  - `created_at` (TIMESTAMP): Defaults to `now()`.
+  - `updated_at` (TIMESTAMP): Defaults to `now()`.
+
+### Table: `chats` (or `conversations`)
+Stores individual chat sessions created by users. This allows users to have multiple isolated conversations with the legal chatbot.
+
+- Columns:
+  - `id` (UUID, Primary Key): Unique identifier for the chat session. Defaults to `uuid_generate_v4()`.
+  - `user_id` (UUID, Foreign Key): References `profiles(id)` with ON DELETE CASCADE.
+  - `title` (VARCHAR): A short title for the chat session (e.g., "Property Dispute Inquiry").
+  - `created_at` (TIMESTAMP): Defaults to `now()`.
+  - `updated_at` (TIMESTAMP): Defaults to `now()`.
+
+### Table: `messages`
+Stores the individual messages (both user queries and AI responses) within a specific chat session. This serves as the conversational memory.
+
+- Columns:
+  - `id` (UUID, Primary Key): Unique identifier for the message. Defaults to `uuid_generate_v4()`.
+  - `chat_id` (UUID, Foreign Key): References `chats(id)` with ON DELETE CASCADE.
+  - `role` (VARCHAR): The sender of the message. Must be either 'user' or 'assistant'.
+  - `content` (TEXT): The actual text content of the message.
+  - `audio_url` (VARCHAR, Nullable): If the user used Whisper for audio input, a reference to the audio file stored in Supabase Storage.
+  - `image_url` (VARCHAR, Nullable): If the user uploaded an image for OCR, a reference to the image file stored in Supabase Storage.
+  - `created_at` (TIMESTAMP): Defaults to `now()`.
+
+### Table: `user_documents` (Optional but Recommended)
+If the system allows users to upload their own legal documents (PDFs, images) for context before querying the chatbot, this table stores the metadata while ChromaDB stores the vectors.
+
+- Columns:
+  - `id` (UUID, Primary Key): Unique identifier for the document. Defaults to `uuid_generate_v4()`.
+  - `user_id` (UUID, Foreign Key): References `profiles(id)` with ON DELETE CASCADE.
+  - `file_name` (VARCHAR): Original name of the uploaded file.
+  - `file_url` (VARCHAR): Reference to the file in Supabase Storage.
+  - `document_type` (VARCHAR): e.g., 'pdf', 'image'.
+  - `created_at` (TIMESTAMP): Defaults to `now()`.
+
+3. Relationships and Keys Summary
+---------------------------------
+- `profiles.id` (1) <---> (1) `auth.users.id`
+- `profiles.id` (1) <---> (Many) `chats.user_id`
+- `chats.id` (1) <---> (Many) `messages.chat_id`
+- `profiles.id` (1) <---> (Many) `user_documents.user_id`
+
+4. Row Level Security (RLS) Policies Required
+---------------------------------------------
+To ensure data privacy and security, the following RLS policies should be implemented:
+
+- `profiles`:
+  - Users can SELECT, UPDATE their own profile where `auth.uid() = id`.
+- `chats`:
+  - Users can SELECT, INSERT, UPDATE, DELETE their own chats where `auth.uid() = user_id`.
+- `messages`:
+  - Users can SELECT, INSERT messages where the `chat_id` belongs to them.
+- `user_documents`:
+  - Users can SELECT, INSERT, DELETE their own documents where `auth.uid() = user_id`.
+
+5. Supabase Storage Buckets
+---------------------------
+You will need to create the following storage buckets in Supabase:
+- `audio_uploads`: For storing temporary audio files submitted for Whisper transcription.
+- `image_uploads`: For storing images submitted for OCR processing.
+- `user_documents`: (If implemented) For storing user-uploaded PDFs or reference documents.
+Make sure to set appropriate RLS policies on these buckets so users can only access their own files.

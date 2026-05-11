@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-panel: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+  }
+
+  .dark {
+    --bg-primary: #040814;
+    --bg-panel: #0f172a;
+    --bg-hover: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+  }
+
+  body {
+    @apply bg-bg-primary text-text-primary font-sans antialiased transition-colors duration-300;
+  }
+}
+
+/* Custom scrollbar for chat */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@utility glass-panel {
+  @apply bg-slate-800/60 backdrop-blur-md border border-slate-700/50 shadow-xl;
+}
