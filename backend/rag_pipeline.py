@@ -1,5 +1,5 @@
 import chromadb
-from sentence_transformers import SentenceTransformer
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from groq import Groq
 import os
 from dotenv import load_dotenv
@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize components globally to avoid reloading on every request
-print("Initializing Embedding Model...")
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+print("Initializing Embedding Model (ONNX)...")
+embedding_model = DefaultEmbeddingFunction()
 
 print("Connecting to ChromaDB...")
 chroma_client = chromadb.PersistentClient(path="../vector_db")
@@ -30,7 +30,7 @@ def retrieve_context(query: str, top_k: int = 3):
     if collection is None:
         return [], []
     
-    query_embedding = embedding_model.encode([query]).tolist()
+    query_embedding = embedding_model([query])
     
     results = collection.query(
         query_embeddings=query_embedding,

@@ -1,11 +1,9 @@
 fastapi
 uvicorn
 chromadb
-sentence-transformers
 pytesseract
 groq
 pdfplumber
-openai-whisper
 python-multipart
 pandas
 pydantic

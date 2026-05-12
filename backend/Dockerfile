@@ -6,11 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies:
-# - ffmpeg: for openai-whisper
 # - tesseract-ocr: for pytesseract
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    ffmpeg \
     tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
