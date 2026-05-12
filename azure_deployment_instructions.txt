@@ -1,0 +1,89 @@
+======================================================
+AZURE DEPLOYMENT INSTRUCTIONS FOR LEXAI
+======================================================
+
+Follow these exact steps to deploy your optimized LexAI project to Azure.
+
+------------------------------------------------------
+PART 1: Push Your Code to GitHub
+------------------------------------------------------
+Azure uses GitHub to automatically deploy your code.
+
+1. Open a terminal in your project folder (c:\Users\Lenovo\Desktop\legalchatbot).
+2. Run these commands:
+   git add .
+   git commit -m "Optimize for Azure deployment"
+   git push origin main
+
+
+------------------------------------------------------
+PART 2: Deploy Backend to Azure App Service
+------------------------------------------------------
+Because your backend needs OCR, we use Azure Web App for Containers (Docker).
+
+1. Go to the Azure Portal (https://portal.azure.com/).
+2. Search for "App Services" and click "Create" -> "Web App".
+3. In the "Basics" Tab:
+   - Resource Group: Create a new one (e.g., LexAI-rg).
+   - Name: Enter a unique name (e.g., lexai-backend-123).
+   - Publish: Select "Container".
+   - Operating System: Select "Linux".
+   - Region: Select Central India (or a region your university policy allows).
+   - Pricing Plan: Select "Basic B1".
+4. In the "Container" Tab:
+   - Image Source: Select "Quickstart".
+5. Click "Review + Create", then "Create". Wait for the deployment to finish.
+6. Once deployed, click "Go to resource".
+7. Azure's UI currently hides the GitHub Actions option. Instead, at the top of the Overview page, click "Download publish profile".
+8. Go to your repository on GitHub.com -> Settings -> Secrets and variables -> Actions.
+9. Click "New repository secret" and add:
+   - Name: AZURE_WEBAPP_NAME
+   - Value: (The exact name of your web app, e.g., lexai-backend-123)
+10. Click "New repository secret" again and add:
+   - Name: AZURE_WEBAPP_PUBLISH_PROFILE
+   - Value: (Open the file you downloaded, copy ALL the text inside, and paste it here)
+11. Push your code from your terminal to trigger the deployment:
+    git add .
+    git commit -m "Deploy to Azure via manual workflow"
+    git push origin main
+12. Go back to your Web App resource in Azure -> "Settings" -> "Environment variables" -> add:
+   - Name: GROQ_API_KEY      Value: (Your actual Groq API key)
+   - Name: WEBSITES_PORT     Value: 8000
+
+
+------------------------------------------------------
+PART 3: Deploy Frontend to Azure Static Web Apps
+------------------------------------------------------
+
+1. In the Azure Portal, search for "Static Web Apps" and click "Create".
+2. In the "Basics" Tab:
+   - Resource Group: Select "LexAI-rg".
+   - Name: Enter a name (e.g., lexai-frontend).
+   - Plan type: "Free".
+3. In the "Deployment Details" section:
+   - Source: Select "GitHub".
+   - Authenticate and select your repository and the "main" branch.
+4. In the "Build Details" section:
+   - Build Presets: Select "React".
+   - App location: /frontend/react-app
+   - Api location: (Leave blank)
+   - Output location: dist
+5. Click "Review + Create", then "Create".
+6. Once deployed, go to the resource. Under "Settings" -> "Environment variables", add:
+   - Name: VITE_API_URL            Value: (Your backend URL, e.g., https://lexai-backend-123.azurewebsites.net)
+   - Name: VITE_SUPABASE_URL       Value: (Your Supabase URL)
+   - Name: VITE_SUPABASE_ANON_KEY  Value: (Your Supabase key)
+
+
+------------------------------------------------------
+PART 4: Final Security Step (CORS)
+------------------------------------------------------
+Once Azure gives your Frontend a URL (e.g., https://orange-sky-1234.azurestaticapps.net):
+
+1. Go back to your Backend App Service in Azure.
+2. Go to "Settings" -> "Environment variables".
+3. Add a new variable:
+   - Name: FRONTEND_URL
+   - Value: https://orange-sky-1234.azurestaticapps.net
+
+You're completely done! Your app is now live on Azure.
