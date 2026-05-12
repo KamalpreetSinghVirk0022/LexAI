@@ -15,9 +15,12 @@ import pdf_parser
 app = FastAPI(title="Legal Advice Chatbot API")
 
 # Configure CORS for React frontend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+origins = [frontend_url, "http://localhost:5173", "*"] if frontend_url == "*" else [frontend_url, "http://localhost:5173"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
