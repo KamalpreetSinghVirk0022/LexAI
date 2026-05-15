@@ -8,3 +8,5 @@ python-multipart
 pandas
 pydantic
 pydantic-settings
+PyPDF2
+python-dotenv
