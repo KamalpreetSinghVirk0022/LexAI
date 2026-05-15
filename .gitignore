@@ -21,7 +21,7 @@ build/
 !.env.example
 
 # ── Vector Database (large binary files) ─
-vector_db/
+# vector_db/
 
 # ── Large Dataset Files ──────────────────
 datasets/

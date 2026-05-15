@@ -16,13 +16,16 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the backend code into the container
-COPY . .
+COPY backend /app
+
+# Copy the vector database
+COPY vector_db /vector_db
 
 # Expose the port (Render sets the PORT environment variable)
 EXPOSE 8000
