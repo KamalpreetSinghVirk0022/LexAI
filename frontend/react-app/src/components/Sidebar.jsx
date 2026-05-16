@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MessageSquare, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +8,26 @@ export default function Sidebar({ currentChatId, setCurrentChatId, setExternalQu
   const [chats, setChats] = useState([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const { user } = useAuth();
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDeleteChat = async (e, chatId) => {
+    e.stopPropagation(); // Prevent triggering the chat select
+    setDeletingId(chatId);
+    try {
+      // Delete messages first (foreign key constraint)
+      await supabase.from('messages').delete().eq('chat_id', chatId);
+      // Then delete the chat
+      const { error } = await supabase.from('chats').delete().eq('id', chatId);
+      if (!error) {
+        setChats(prev => prev.filter(c => c.id !== chatId));
+        // If the deleted chat was active, clear selection
+        if (currentChatId === chatId) setCurrentChatId(null);
+      }
+    } catch (err) {
+      console.error('Error deleting chat:', err);
+    }
+    setDeletingId(null);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -87,16 +107,29 @@ export default function Sidebar({ currentChatId, setCurrentChatId, setExternalQu
       <div className="space-y-1">
         <h4 className="text-xs text-slate-400 mb-2 px-2">{title}</h4>
         {group.map((chat) => (
-          <button 
-            key={chat.id} 
-            onClick={() => setCurrentChatId(chat.id)}
-            className={`w-full flex items-center gap-3 px-2 py-2 text-sm rounded-lg transition-colors text-left truncate ${
+          <div
+            key={chat.id}
+            className={`group w-full flex items-center gap-2 px-2 py-2 text-sm rounded-lg transition-colors ${
               currentChatId === chat.id ? 'bg-bg-hover text-primary' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
             }`}
           >
-            <MessageSquare size={16} className={`flex-shrink-0 ${currentChatId === chat.id ? 'text-primary' : 'text-text-secondary'}`} />
-            <span className="truncate">{chat.title}</span>
-          </button>
+            <button
+              onClick={() => setCurrentChatId(chat.id)}
+              className="flex items-center gap-2 flex-1 text-left min-w-0"
+            >
+              <MessageSquare size={16} className={`flex-shrink-0 ${currentChatId === chat.id ? 'text-primary' : 'text-text-secondary'}`} />
+              <span className="truncate">{chat.title}</span>
+            </button>
+            <button
+              onClick={(e) => handleDeleteChat(e, chat.id)}
+              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:text-red-400 hover:bg-red-400/10"
+              title="Delete chat"
+            >
+              {deletingId === chat.id
+                ? <Loader2 size={13} className="animate-spin" />
+                : <Trash2 size={13} />}
+            </button>
+          </div>
         ))}
       </div>
     );
