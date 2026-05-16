@@ -27,6 +27,9 @@ app.add_middleware(
 )
 
 from typing import List, Optional
+from groq import Groq
+
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 class Message(BaseModel):
     role: str
@@ -126,6 +129,65 @@ async def document_endpoint(file: UploadFile = File(...)):
         
     answer, sources = rag_pipeline.process_query(extracted_text)
     return ChatResponse(answer=f"[Extracted Document]: {extracted_text[:200]}...\n\n{answer}", sources=[Source(**s) for s in sources])
+
+
+class FollowUpRequest(BaseModel):
+    query: str
+    last_answer: str
+
+class FollowUpResponse(BaseModel):
+    questions: List[str]
+
+@app.post("/followup", response_model=FollowUpResponse)
+async def followup_endpoint(request: FollowUpRequest):
+    """Generate 3 smart follow-up questions based on the last query and answer."""
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a legal assistant. Generate exactly 3 short, relevant follow-up questions a user might ask after receiving the given legal answer. Return ONLY a JSON array of 3 question strings, nothing else. Example: [\"Question 1?\", \"Question 2?\", \"Question 3?\"]"},
+                {"role": "user", "content": f"Original question: {request.query}\n\nAnswer given: {request.last_answer[:500]}\n\nGenerate 3 follow-up questions as a JSON array."}
+            ],
+            temperature=0.7,
+            max_tokens=200
+        )
+        import json as json_module
+        text = response.choices[0].message.content.strip()
+        # Extract JSON array from response
+        start = text.find('[')
+        end = text.rfind(']') + 1
+        questions = json_module.loads(text[start:end]) if start != -1 else []
+        return FollowUpResponse(questions=questions[:3])
+    except Exception as e:
+        return FollowUpResponse(questions=[])
+
+
+class TranslateRequest(BaseModel):
+    text: str
+    target_language: str
+
+class TranslateResponse(BaseModel):
+    translated_text: str
+
+@app.post("/translate", response_model=TranslateResponse)
+async def translate_endpoint(request: TranslateRequest):
+    """Translate legal text to the target Indian language."""
+    if request.target_language.lower() == 'english':
+        return TranslateResponse(translated_text=request.text)
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": f"You are a professional translator. Translate the following legal text accurately to {request.target_language}. Preserve all formatting, bullet points, and legal terms. Return ONLY the translated text, nothing else."},
+                {"role": "user", "content": request.text}
+            ],
+            temperature=0.2,
+            max_tokens=2048
+        )
+        translated = response.choices[0].message.content.strip()
+        return TranslateResponse(translated_text=translated)
+    except Exception as e:
+        return TranslateResponse(translated_text=request.text)
 
 
 if __name__ == "__main__":

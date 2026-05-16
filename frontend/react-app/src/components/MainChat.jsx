@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen } from 'lucide-react';
+import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Globe, ChevronDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import GlossaryText from './GlossaryText';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+const LANGUAGES = ['English', 'Hindi', 'Punjabi', 'Tamil', 'Telugu', 'Bengali'];
 
 export default function MainChat({ currentChatId, setCurrentChatId, externalQuery, setExternalQuery }) {
   const [messages, setMessages] = useState([]);
@@ -13,6 +16,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
   const [isRecording, setIsRecording] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -137,6 +142,39 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
       // Save completed message to DB
       await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
+
+      // --- Parallel: fetch follow-ups and translate ---
+      let followUps = [];
+      let displayText = fullText;
+
+      const [fuResult, trResult] = await Promise.allSettled([
+        // Follow-up questions
+        fetch(`${API_BASE_URL}/followup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: userMessage, last_answer: fullText })
+        }).then(r => r.json()),
+        // Translation (only if non-English)
+        selectedLanguage !== 'English'
+          ? fetch(`${API_BASE_URL}/translate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: fullText, target_language: selectedLanguage })
+            }).then(r => r.json())
+          : Promise.resolve(null)
+      ]);
+
+      if (fuResult.status === 'fulfilled') {
+        followUps = fuResult.value?.questions || [];
+      }
+      if (trResult.status === 'fulfilled' && trResult.value) {
+        displayText = trResult.value.translated_text || fullText;
+      }
+
+      // Update last message with follow-ups and translated text
+      setMessages(prev => prev.map((m, i) =>
+        i === prev.length - 1 ? { ...m, content: displayText, followUps } : m
+      ));
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -408,8 +446,36 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         ) : (
           /* Chat Thread */
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Export Button */}
-            <div className="flex justify-end">
+            {/* Toolbar: Export + Language Selector */}
+            <div className="flex justify-end items-center gap-2">
+              {/* Language Selector */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
+                >
+                  <Globe size={13} />
+                  {selectedLanguage}
+                  <ChevronDown size={11} />
+                </button>
+                {showLangMenu && (
+                  <div className="absolute right-0 top-8 z-50 bg-bg-panel border border-border-color rounded-xl shadow-2xl overflow-hidden min-w-[130px]">
+                    {LANGUAGES.map(lang => (
+                      <button
+                        key={lang}
+                        onClick={() => { setSelectedLanguage(lang); setShowLangMenu(false); }}
+                        className={`w-full text-left px-4 py-2 text-xs transition-colors ${
+                          lang === selectedLanguage
+                            ? 'bg-primary/10 text-primary font-semibold'
+                            : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={exportChatAsPdf}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
@@ -449,9 +515,13 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
                     </button>
                   ) : (
                     <>
-                      {msg.content.split('\n').map((line, i) => (
-                        <span key={i}>{line}<br/></span>
-                      ))}
+                      {/* Use GlossaryText for AI messages, plain text for user */}
+                      {msg.role === 'assistant'
+                        ? <GlossaryText text={msg.content} />
+                        : msg.content.split('\n').map((line, i) => (
+                            <span key={i}>{line}<br/></span>
+                          ))
+                      }
                       {/* Streaming cursor */}
                       {msg.role === 'assistant' && !isLoading && msg.content === '' && (
                         <span className="inline-block w-2 h-4 bg-primary/70 animate-pulse rounded-sm ml-0.5" />
@@ -465,6 +535,23 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
                               {src.name}{src.page ? ` · p.${src.page}` : ''}
                             </span>
                           ))}
+                        </div>
+                      )}
+                      {/* Follow-up Question Chips */}
+                      {msg.role === 'assistant' && msg.followUps?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-border-color">
+                          <p className="text-[10px] text-text-secondary mb-2 font-medium uppercase tracking-wider">Follow-up questions</p>
+                          <div className="flex flex-col gap-1.5">
+                            {msg.followUps.map((q, qi) => (
+                              <button
+                                key={qi}
+                                onClick={() => handleSend(q)}
+                                className="text-left text-xs px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-primary hover:bg-primary/15 transition-all"
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </>
