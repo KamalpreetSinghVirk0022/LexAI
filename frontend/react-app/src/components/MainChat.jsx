@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function MainChat({ currentChatId, setCurrentChatId, externalQuery, setExternalQuery }) {
   const [messages, setMessages] = useState([]);
