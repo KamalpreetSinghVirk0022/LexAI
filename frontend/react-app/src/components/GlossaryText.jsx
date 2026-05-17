@@ -64,12 +64,12 @@ export default function GlossaryText({ text }) {
         );
       })}
 
-      {/* Tooltip Portal */}
+      {/* Tooltip — fixed to viewport, no scrollY needed */}
       {tooltip && (
         <span
           className="fixed z-[200] max-w-xs bg-slate-900 border border-indigo-500/40 rounded-xl px-3 py-2 shadow-2xl pointer-events-none"
           style={{
-            top: tooltip.rect.bottom + 8 + window.scrollY,
+            top: tooltip.rect.bottom + 8,
             left: Math.min(tooltip.rect.left, window.innerWidth - 300),
           }}
         >
