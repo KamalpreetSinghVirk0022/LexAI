@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen } from 'lucide-react';
+import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Flame } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isDevilsAdvocate, setIsDevilsAdvocate] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const messagesEndRef = useRef(null);
@@ -94,7 +95,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       const response = await fetch(`${API_BASE_URL}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userMessage, history: historyToSent })
+        body: JSON.stringify({ query: userMessage, history: historyToSent, devils_advocate: isDevilsAdvocate })
       });
 
       if (!response.ok) throw new Error('Stream request failed');
@@ -428,8 +429,22 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         ) : (
           /* Chat Thread */
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Export Button */}
-            <div className="flex justify-end">
+            {/* Toolbar */}
+            <div className="flex justify-between items-center bg-bg-panel border border-border-color rounded-xl px-4 py-2 mb-6">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsDevilsAdvocate(!isDevilsAdvocate)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    isDevilsAdvocate 
+                      ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
+                      : 'text-text-secondary hover:text-primary hover:bg-primary/10 border border-transparent'
+                  }`}
+                  title="Opposing Counsel Simulator"
+                >
+                  <Flame size={14} className={isDevilsAdvocate ? "animate-pulse" : ""} />
+                  Devil's Advocate Mode
+                </button>
+              </div>
               <button
                 onClick={exportChatAsPdf}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
@@ -540,8 +555,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       </div>
 
       {/* Sticky Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bg-primary via-bg-primary to-transparent pt-10 pb-6 px-4 sm:px-8 transition-colors">
-        <div className="max-w-4xl mx-auto relative flex items-end gap-2 bg-bg-panel rounded-2xl border border-border-color p-2 shadow-2xl focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all">
+      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t ${isDevilsAdvocate ? 'from-red-950/20 via-red-900/10' : 'from-bg-primary via-bg-primary'} to-transparent pt-10 pb-6 px-4 sm:px-8 transition-colors duration-500`}>
+        <div className={`max-w-4xl mx-auto relative flex items-end gap-2 bg-bg-panel rounded-2xl border ${isDevilsAdvocate ? 'border-red-500/40 shadow-red-500/10' : 'border-border-color'} p-2 shadow-2xl focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all`}>
           
           <input 
             type="file" 

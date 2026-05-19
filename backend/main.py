@@ -38,6 +38,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     query: str
     history: Optional[List[Message]] = []
+    devils_advocate: Optional[bool] = False
 
 class Source(BaseModel):
     name: str
@@ -55,7 +56,7 @@ async def chat_endpoint(request: ChatRequest):
     
     history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.history] if request.history else []
     
-    answer, sources = rag_pipeline.process_query(request.query, history=history_dicts)
+    answer, sources = rag_pipeline.process_query(request.query, history=history_dicts, devils_advocate=request.devils_advocate)
     return ChatResponse(answer=answer, sources=[Source(**s) for s in sources])
 
 
@@ -66,7 +67,7 @@ async def chat_stream_endpoint(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.history] if request.history else []
-    generator, sources = rag_pipeline.process_query_stream(request.query, history=history_dicts)
+    generator, sources = rag_pipeline.process_query_stream(request.query, history=history_dicts, devils_advocate=request.devils_advocate)
 
     def event_stream():
         # First, emit sources as a special event
