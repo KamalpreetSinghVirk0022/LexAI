@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Globe, ChevronDown } from 'lucide-react';
+import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import GlossaryText from './GlossaryText';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-const LANGUAGES = ['English', 'Hindi', 'Punjabi', 'Tamil', 'Telugu', 'Bengali'];
 
 export default function MainChat({ currentChatId, setCurrentChatId, externalQuery, setExternalQuery }) {
   const [messages, setMessages] = useState([]);
@@ -16,8 +14,6 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
   const [isRecording, setIsRecording] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [showLangMenu, setShowLangMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -143,37 +139,23 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       // Save completed message to DB
       await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
 
-      // --- Parallel: fetch follow-ups and translate ---
+      // --- Parallel: fetch follow-ups ---
       let followUps = [];
-      let displayText = fullText;
 
-      const [fuResult, trResult] = await Promise.allSettled([
-        // Follow-up questions
-        fetch(`${API_BASE_URL}/followup`, {
+      try {
+        const fuResult = await fetch(`${API_BASE_URL}/followup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: userMessage, last_answer: fullText })
-        }).then(r => r.json()),
-        // Translation (only if non-English)
-        selectedLanguage !== 'English'
-          ? fetch(`${API_BASE_URL}/translate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: fullText, target_language: selectedLanguage })
-            }).then(r => r.json())
-          : Promise.resolve(null)
-      ]);
-
-      if (fuResult.status === 'fulfilled') {
-        followUps = fuResult.value?.questions || [];
-      }
-      if (trResult.status === 'fulfilled' && trResult.value) {
-        displayText = trResult.value.translated_text || fullText;
+        }).then(r => r.json());
+        followUps = fuResult?.questions || [];
+      } catch (e) {
+        console.error("Error fetching followups:", e);
       }
 
-      // Update last message with follow-ups and translated text
+      // Update last message with follow-ups
       setMessages(prev => prev.map((m, i) =>
-        i === prev.length - 1 ? { ...m, content: displayText, followUps } : m
+        i === prev.length - 1 ? { ...m, content: fullText, followUps } : m
       ));
 
     } catch (error) {
@@ -446,36 +428,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         ) : (
           /* Chat Thread */
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Toolbar: Export + Language Selector */}
-            <div className="flex justify-end items-center gap-2">
-              {/* Language Selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowLangMenu(v => !v)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
-                >
-                  <Globe size={13} />
-                  {selectedLanguage}
-                  <ChevronDown size={11} />
-                </button>
-                {showLangMenu && (
-                  <div className="absolute right-0 top-8 z-50 bg-bg-panel border border-border-color rounded-xl shadow-2xl overflow-hidden min-w-[130px]">
-                    {LANGUAGES.map(lang => (
-                      <button
-                        key={lang}
-                        onClick={() => { setSelectedLanguage(lang); setShowLangMenu(false); }}
-                        className={`w-full text-left px-4 py-2 text-xs transition-colors ${
-                          lang === selectedLanguage
-                            ? 'bg-primary/10 text-primary font-semibold'
-                            : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
-                        }`}
-                      >
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Export Button */}
+            <div className="flex justify-end">
               <button
                 onClick={exportChatAsPdf}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
