@@ -369,8 +369,37 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-bg-primary relative transition-colors duration-300">
+      
+      {/* Sticky Toolbar - Only show when there are messages */}
+      {messages.length > 0 && (
+        <div className="absolute top-0 left-0 right-0 z-10 bg-bg-primary/80 backdrop-blur-md border-b border-border-color px-4 sm:px-8 py-3 flex justify-between items-center shadow-sm">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDevilsAdvocate(!isDevilsAdvocate)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                isDevilsAdvocate 
+                  ? 'bg-red-500/20 text-red-500 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
+                  : 'text-text-secondary hover:text-primary hover:bg-primary/10 border border-transparent'
+              }`}
+              title="Opposing Counsel Simulator"
+            >
+              <Flame size={14} className={isDevilsAdvocate ? "animate-pulse" : ""} />
+              Devil's Advocate Mode
+            </button>
+          </div>
+          <button
+            onClick={exportChatAsPdf}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all bg-bg-panel"
+            title="Export consultation as PDF"
+          >
+            <Download size={13} />
+            Export PDF
+          </button>
+        </div>
+      )}
+
       {/* Chat Messages Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-8 py-6 pb-32">
+      <div className={`flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-8 pb-32 ${messages.length > 0 ? 'pt-20' : 'py-6'}`}>
         {messages.length === 0 ? (
           /* Welcome Screen */
           <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto w-full animate-fade-in mt-10">
@@ -429,31 +458,6 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         ) : (
           /* Chat Thread */
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Toolbar */}
-            <div className="flex justify-between items-center bg-bg-panel border border-border-color rounded-xl px-4 py-2 mb-6">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsDevilsAdvocate(!isDevilsAdvocate)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    isDevilsAdvocate 
-                      ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
-                      : 'text-text-secondary hover:text-primary hover:bg-primary/10 border border-transparent'
-                  }`}
-                  title="Opposing Counsel Simulator"
-                >
-                  <Flame size={14} className={isDevilsAdvocate ? "animate-pulse" : ""} />
-                  Devil's Advocate Mode
-                </button>
-              </div>
-              <button
-                onClick={exportChatAsPdf}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all"
-                title="Export consultation as PDF"
-              >
-                <Download size={13} />
-                Export PDF
-              </button>
-            </div>
 
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
