@@ -54,7 +54,7 @@ def retrieve_context(query: str, top_k: int = 3):
             sources.append({'name': name, 'page': str(page) if page else ''})
     return docs, sources
 
-def _build_prompt(query: str, context_docs: list, history: list = None, devils_advocate: bool = False) -> list:
+def _build_prompt(query: str, context_docs: list, history: list = None) -> list:
     """Build the messages list for the Groq API call."""
     context_text = "\n\n".join(context_docs) if context_docs else "No relevant context found."
     
@@ -74,18 +74,14 @@ def _build_prompt(query: str, context_docs: list, history: list = None, devils_a
 Current Question:
 {query}"""
 
-    system_instruction = "You are a helpful legal assistant for Indian Law. IMPORTANT: Do not assume the user's state (e.g., Karnataka, Maharashtra) or city unless they explicitly mention it in their query. Keep your advice generalized to Indian law or advise them to check their local state laws if applicable."
-    if devils_advocate:
-        system_instruction += "\n\nCRITICAL INSTRUCTION: You are now acting as the opposing counsel (Devil's Advocate). The user is presenting their side of a legal dispute. Your job is NOT to help them. Your job is to aggressively argue AGAINST them, point out all logical flaws, lack of evidence, and legal loopholes in their argument, and explain exactly how the other side will defeat them in court. Be highly critical, adversarial, and relentless, but maintain a professional legal tone."
-
     return [
-        {"role": "system", "content": system_instruction},
+        {"role": "system", "content": "You are a helpful legal assistant for Indian Law. IMPORTANT: Do not assume the user's state (e.g., Karnataka, Maharashtra) or city unless they explicitly mention it in their query. Keep your advice generalized to Indian law or advise them to check their local state laws if applicable."},
         {"role": "user", "content": prompt}
     ]
 
 
-def generate_answer(query: str, context_docs: list, history: list = None, devils_advocate: bool = False) -> str:
-    messages = _build_prompt(query, context_docs, history, devils_advocate)
+def generate_answer(query: str, context_docs: list, history: list = None) -> str:
+    messages = _build_prompt(query, context_docs, history)
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -99,9 +95,9 @@ def generate_answer(query: str, context_docs: list, history: list = None, devils
         return f"I encountered an error while generating the response: {str(e)}" + DISCLAIMER
 
 
-def stream_answer(query: str, context_docs: list, history: list = None, devils_advocate: bool = False):
+def stream_answer(query: str, context_docs: list, history: list = None):
     """Generator that yields text chunks from the Groq streaming API."""
-    messages = _build_prompt(query, context_docs, history, devils_advocate)
+    messages = _build_prompt(query, context_docs, history)
     try:
         stream = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -119,14 +115,14 @@ def stream_answer(query: str, context_docs: list, history: list = None, devils_a
         yield f"Error: {str(e)}" + DISCLAIMER
 
 
-def process_query(query: str, history: list = None, devils_advocate: bool = False) -> tuple:
+def process_query(query: str, history: list = None) -> tuple:
     """Returns (answer: str, sources: list)"""
     context_docs, sources = retrieve_context(query)
-    answer = generate_answer(query, context_docs, history, devils_advocate)
+    answer = generate_answer(query, context_docs, history)
     return answer, sources
 
 
-def process_query_stream(query: str, history: list = None, devils_advocate: bool = False) -> tuple:
+def process_query_stream(query: str, history: list = None) -> tuple:
     """Returns (generator, sources: list)"""
     context_docs, sources = retrieve_context(query)
-    return stream_answer(query, context_docs, history, devils_advocate), sources
+    return stream_answer(query, context_docs, history), sources
