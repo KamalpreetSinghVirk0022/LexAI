@@ -16,7 +16,16 @@ app = FastAPI(title="Legal Advice Chatbot API")
 
 # Configure CORS for React frontend
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-origins = [frontend_url, "http://localhost:5173", "*"] if frontend_url == "*" else [frontend_url, "http://localhost:5173"]
+origins = [
+    frontend_url, 
+    "http://localhost:5173", 
+    "https://lex-ai-mu-navy.vercel.app",
+    "*"
+] if frontend_url == "*" else [
+    frontend_url, 
+    "http://localhost:5173",
+    "https://lex-ai-mu-navy.vercel.app"
+]
 
 app.add_middleware(
     CORSMiddleware,
