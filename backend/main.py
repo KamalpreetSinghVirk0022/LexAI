@@ -14,32 +14,13 @@ import pdf_parser
 
 app = FastAPI(title="Legal Advice Chatbot API")
 
-def _cors_origins():
-    """Build allowed origins from env while keeping local dev working."""
-    default_origins = {
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    }
-
-    configured = []
-    for env_name in ("FRONTEND_URL", "FRONTEND_URLS"):
-        value = os.getenv(env_name, "")
-        configured.extend(origin.strip().rstrip("/") for origin in value.split(",") if origin.strip())
-
-    origins = default_origins.union(configured)
-    if "*" in origins:
-        return ["*"]
-    return sorted(origins)
-
-
-# Configure CORS for React frontend. Vercel preview deployments get unique
-# subdomains, so allow the configured origins plus Vercel-hosted frontend URLs.
-origins = _cors_origins()
+# Configure CORS for React frontend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+origins = [frontend_url, "http://localhost:5173", "*"] if frontend_url == "*" else [frontend_url, "http://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,15 +30,6 @@ from typing import List, Optional
 from groq import Groq
 
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "ok",
-        "cors_origins": origins,
-        "cors_origin_regex": r"https://.*\.vercel\.app",
-    }
 
 class Message(BaseModel):
     role: str

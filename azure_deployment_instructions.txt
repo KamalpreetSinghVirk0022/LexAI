@@ -86,12 +86,4 @@ Once Azure gives your Frontend a URL (e.g., https://orange-sky-1234.azurestatica
    - Name: FRONTEND_URL
    - Value: https://orange-sky-1234.azurestaticapps.net
 
-If your frontend is deployed on Vercel instead, use your Vercel URL here, for example:
-   - Name: FRONTEND_URL
-   - Value: https://lex-ai-git-main-your-project.vercel.app
-
-For multiple frontend URLs, add them comma-separated:
-   - Name: FRONTEND_URLS
-   - Value: https://your-production-site.vercel.app,https://your-preview-site.vercel.app
-
 You're completely done! Your app is now live on Azure.
