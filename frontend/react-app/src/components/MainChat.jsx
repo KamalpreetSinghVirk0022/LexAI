@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import GlossaryText from './GlossaryText';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const WEB_SEARCH_PROMPT_HINT = 'would you like me to search the web';
 
 export default function MainChat({ currentChatId, setCurrentChatId, externalQuery, setExternalQuery }) {
   const [messages, setMessages] = useState([]);
@@ -477,6 +478,9 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
           <div className="max-w-4xl mx-auto space-y-6">
 
             {messages.map((msg, idx) => (
+              (() => {
+                const fallbackWebQuery = msg.webSearchQuery || (idx > 0 && messages[idx - 1]?.role === 'user' ? messages[idx - 1].content : null);
+                return (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                 <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl relative group ${
                   msg.type === 'file'
@@ -528,12 +532,12 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
                         </div>
                       )}
                       {/* Web Search Confirmation */}
-                      {msg.role === 'assistant' && msg.webSearchSuggested && msg.webSearchQuery && (
+                      {msg.role === 'assistant' && (msg.webSearchSuggested || msg.content?.toLowerCase().includes(WEB_SEARCH_PROMPT_HINT)) && fallbackWebQuery && (
                         <div className="mt-3 pt-3 border-t border-border-color">
                           <button
-                            onClick={() => handleSend(msg.webSearchQuery, {
+                            onClick={() => handleSend(fallbackWebQuery, {
                               useWebSearch: true,
-                              displayMessage: `Search the web for: ${msg.webSearchQuery}`
+                              displayMessage: `Search the web for: ${fallbackWebQuery}`
                             })}
                             className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all"
                           >
@@ -576,6 +580,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
                   )}
                 </div>
               </div>
+                );
+              })()
             ))}
             {isLoading && (
               <div className="flex justify-start animate-fade-in">

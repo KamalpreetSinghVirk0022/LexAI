@@ -27,6 +27,13 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 DISCLAIMER = "\n\n**Disclaimer:** This chatbot provides legal information for educational purposes only and is not a substitute for professional legal advice."
 WEB_SEARCH_PROMPT = "I could not find enough reliable information about this question in my legal knowledge base. Would you like me to search the web for updated information and answer using those web results?"
 RAG_MAX_DISTANCE = float(os.getenv("RAG_MAX_DISTANCE", "1.2"))
+UNKNOWN_ANSWER_MARKERS = (
+    "i don't know",
+    "i do not know",
+    "not in the context",
+    "no relevant context found",
+    "not enough information",
+)
 
 def retrieve_context(query: str, top_k: int = 3):
     """Returns (docs, sources, distances). Lower distances mean better matches."""
@@ -157,6 +164,8 @@ def process_query(query: str, history: list = None, use_web_search: bool = False
         return answer, sources, {"web_search_used": True}
 
     answer = generate_answer(query, context_docs, history)
+    if any(marker in answer.lower() for marker in UNKNOWN_ANSWER_MARKERS):
+        return WEB_SEARCH_PROMPT, [], {"web_search_suggested": True}
     return answer, sources, {"web_search_suggested": False, "web_search_used": False}
 
 
@@ -179,4 +188,13 @@ def process_query_stream(query: str, history: list = None, use_web_search: bool 
         sources = [{"name": result["title"], "page": result["url"]} for result in web_results]
         return stream_answer(query, context_docs, history, context_label="Web search results"), sources, {"web_search_used": True}
 
-    return stream_answer(query, context_docs, history), sources, {"web_search_suggested": False, "web_search_used": False}
+    base_generator = stream_answer(query, context_docs, history)
+
+    def guarded_generator():
+        chunks = []
+        for chunk in base_generator:
+            chunks.append(chunk)
+            yield chunk
+
+    meta = {"web_search_suggested": False, "web_search_used": False}
+    return guarded_generator(), sources, meta
