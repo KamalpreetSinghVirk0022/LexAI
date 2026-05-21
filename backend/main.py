@@ -47,6 +47,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     query: str
     history: Optional[List[Message]] = []
+    use_web_search: bool = False
 
 class Source(BaseModel):
     name: str
@@ -64,7 +65,11 @@ async def chat_endpoint(request: ChatRequest):
     
     history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.history] if request.history else []
     
-    answer, sources = rag_pipeline.process_query(request.query, history=history_dicts)
+    answer, sources, _meta = rag_pipeline.process_query(
+        request.query,
+        history=history_dicts,
+        use_web_search=request.use_web_search
+    )
     return ChatResponse(answer=answer, sources=[Source(**s) for s in sources])
 
 
@@ -75,12 +80,17 @@ async def chat_stream_endpoint(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.history] if request.history else []
-    generator, sources = rag_pipeline.process_query_stream(request.query, history=history_dicts)
+    generator, sources, meta = rag_pipeline.process_query_stream(
+        request.query,
+        history=history_dicts,
+        use_web_search=request.use_web_search
+    )
 
     def event_stream():
         # First, emit sources as a special event
         sources_payload = json.dumps([s for s in sources])
         yield f"event: sources\ndata: {sources_payload}\n\n"
+        yield f"event: meta\ndata: {json.dumps(meta)}\n\n"
 
         # Then stream the text chunks
         for chunk in generator:
@@ -109,7 +119,7 @@ async def voice_endpoint(file: UploadFile = File(...)):
     if not query:
         return ChatResponse(answer="Could not transcribe audio.", sources=[])
         
-    answer, sources = rag_pipeline.process_query(query)
+    answer, sources, _meta = rag_pipeline.process_query(query)
     return ChatResponse(answer=f"[Transcribed]: {query}\n\n{answer}", sources=[Source(**s) for s in sources])
 
 
@@ -121,7 +131,7 @@ async def image_endpoint(file: UploadFile = File(...)):
     if not extracted_text:
         return ChatResponse(answer="Could not extract text from the image.", sources=[])
         
-    answer, sources = rag_pipeline.process_query(extracted_text)
+    answer, sources, _meta = rag_pipeline.process_query(extracted_text)
     return ChatResponse(answer=f"[Extracted Text]: {extracted_text[:200]}...\n\n{answer}", sources=[Source(**s) for s in sources])
 
 
@@ -136,7 +146,7 @@ async def document_endpoint(file: UploadFile = File(...)):
     if not extracted_text:
         return ChatResponse(answer="Could not extract text from the PDF. It might be empty or scanned.", sources=[])
         
-    answer, sources = rag_pipeline.process_query(extracted_text)
+    answer, sources, _meta = rag_pipeline.process_query(extracted_text)
     return ChatResponse(answer=f"[Extracted Document]: {extracted_text[:200]}...\n\n{answer}", sources=[Source(**s) for s in sources])
 
 

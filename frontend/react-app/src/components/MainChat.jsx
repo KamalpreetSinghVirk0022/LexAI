@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen } from 'lucide-react';
+import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -64,14 +64,15 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
     }
   }, [externalQuery]);
 
-  const handleSend = async (forcedMessage = null) => {
+  const handleSend = async (forcedMessage = null, options = {}) => {
     const userMessage = forcedMessage || input.trim();
+    const displayMessage = options.displayMessage || userMessage;
     if (!userMessage || isLoading || !user) return;
 
     if (!forcedMessage) setInput('');
     if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); }
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage, type: 'text' }]);
+    setMessages(prev => [...prev, { role: 'user', content: displayMessage, type: 'text' }]);
     setIsLoading(true);
 
     try {
@@ -79,14 +80,14 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       if (!chatIdToUse) {
         const { data: chatData, error: chatError } = await supabase
           .from('chats')
-          .insert({ user_id: user.id, title: userMessage.length > 30 ? userMessage.substring(0, 30) + '...' : userMessage })
+          .insert({ user_id: user.id, title: displayMessage.length > 30 ? displayMessage.substring(0, 30) + '...' : displayMessage })
           .select().single();
         if (chatError) throw chatError;
         chatIdToUse = chatData.id;
         setCurrentChatId(chatIdToUse);
       }
 
-      await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'user', content: userMessage });
+      await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'user', content: displayMessage });
 
       const historyToSent = messages.map(m => ({ role: m.role, content: m.content }));
 
@@ -94,7 +95,11 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       const response = await fetch(`${API_BASE_URL}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userMessage, history: historyToSent })
+        body: JSON.stringify({
+          query: userMessage,
+          history: historyToSent,
+          use_web_search: Boolean(options.useWebSearch)
+        })
       });
 
       if (!response.ok) throw new Error('Stream request failed');
@@ -103,6 +108,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       const decoder = new TextDecoder();
       let fullText = '';
       let sources = [];
+      let responseMeta = {};
       const streamingMsgIdx = messages.length + 1; // index of new AI message
 
       // Add empty AI message placeholder for streaming
@@ -110,6 +116,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
       setIsLoading(false);
 
       let buffer = '';
+      let currentEvent = 'message';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -118,19 +125,31 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         buffer = lines.pop(); // keep incomplete line in buffer
 
         for (const line of lines) {
-          if (line.startsWith('event: sources')) continue;
-          if (line.startsWith('event: done')) continue;
-          if (line.startsWith('data: [DONE]')) continue;
-          if (line.startsWith('data: ') && line.includes('"name"')) {
-            // sources JSON array
-            try { sources = JSON.parse(line.slice(6)); } catch {}
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
             continue;
           }
+          if (line.startsWith('data: [DONE]')) continue;
+
+          if (line.startsWith('data: ') && currentEvent === 'sources') {
+            try { sources = JSON.parse(line.slice(6)); } catch (err) { console.error('Source parse error:', err); }
+            currentEvent = 'message';
+            continue;
+          }
+
+          if (line.startsWith('data: ') && currentEvent === 'meta') {
+            try { responseMeta = JSON.parse(line.slice(6)); } catch (err) { console.error('Meta parse error:', err); }
+            currentEvent = 'message';
+            continue;
+          }
+
+          if (currentEvent === 'done') continue;
+
           if (line.startsWith('data: ')) {
             const chunk = line.slice(6).replace(/\\n/g, '\n');
             fullText += chunk;
             setMessages(prev => prev.map((m, i) =>
-              i === prev.length - 1 ? { ...m, content: fullText, sources } : m
+              i === prev.length - 1 ? { ...m, content: fullText, sources, ...responseMeta } : m
             ));
           }
         }
@@ -138,6 +157,19 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
       // Save completed message to DB
       await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
+
+      if (responseMeta.web_search_suggested) {
+        setMessages(prev => prev.map((m, i) =>
+          i === prev.length - 1 ? {
+            ...m,
+            content: fullText,
+            sources,
+            webSearchSuggested: true,
+            webSearchQuery: userMessage
+          } : m
+        ));
+        return;
+      }
 
       // --- Parallel: fetch follow-ups ---
       let followUps = [];
@@ -155,7 +187,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
       // Update last message with follow-ups
       setMessages(prev => prev.map((m, i) =>
-        i === prev.length - 1 ? { ...m, content: fullText, followUps } : m
+        i === prev.length - 1 ? { ...m, content: fullText, followUps, sources, ...responseMeta } : m
       ));
 
     } catch (error) {
@@ -493,6 +525,21 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
                               {src.name}{src.page ? ` · p.${src.page}` : ''}
                             </span>
                           ))}
+                        </div>
+                      )}
+                      {/* Web Search Confirmation */}
+                      {msg.role === 'assistant' && msg.webSearchSuggested && msg.webSearchQuery && (
+                        <div className="mt-3 pt-3 border-t border-border-color">
+                          <button
+                            onClick={() => handleSend(msg.webSearchQuery, {
+                              useWebSearch: true,
+                              displayMessage: `Search the web for: ${msg.webSearchQuery}`
+                            })}
+                            className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all"
+                          >
+                            <Search size={14} />
+                            Search the web
+                          </button>
                         </div>
                       )}
                       {/* Follow-up Question Chips */}
