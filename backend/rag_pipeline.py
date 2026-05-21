@@ -34,6 +34,14 @@ UNKNOWN_ANSWER_MARKERS = (
     "no relevant context found",
     "not enough information",
 )
+LEGAL_KEYWORDS = (
+    "law", "legal", "ipc", "crpc", "constitution", "fir", "bail", "police",
+    "court", "judge", "rights", "complaint", "consumer", "divorce", "marriage",
+    "property", "tenant", "cybercrime", "arrest", "advocate", "lawyer",
+    "section", "act", "crime", "offence", "offense", "contract", "succession",
+    "inheritance", "harassment", "domestic violence", "maintenance", "rti",
+    "gst", "tax", "cheque bounce", "fraud", "scam"
+)
 
 def retrieve_context(query: str, top_k: int = 3):
     """Returns (docs, sources, distances). Lower distances mean better matches."""
@@ -73,6 +81,19 @@ def is_context_confident(context_docs: list, distances: list) -> bool:
         return True
     best_distance = min(distances)
     return best_distance <= RAG_MAX_DISTANCE
+
+
+def looks_legal_query(query: str) -> bool:
+    query_lower = query.lower()
+    return any(keyword in query_lower for keyword in LEGAL_KEYWORDS)
+
+
+def should_offer_web_search(query: str, context_docs: list, distances: list, use_web_search: bool) -> bool:
+    if use_web_search:
+        return False
+    if not looks_legal_query(query):
+        return True
+    return not is_context_confident(context_docs, distances)
 
 
 def web_results_to_context(results: list) -> list:
@@ -151,7 +172,7 @@ def process_query(query: str, history: list = None, use_web_search: bool = False
     """Returns (answer: str, sources: list, meta: dict)."""
     context_docs, sources, distances = retrieve_context(query)
 
-    if not use_web_search and not is_context_confident(context_docs, distances):
+    if should_offer_web_search(query, context_docs, distances, use_web_search):
         return WEB_SEARCH_PROMPT, [], {"web_search_suggested": True}
 
     if use_web_search:
@@ -173,7 +194,7 @@ def process_query_stream(query: str, history: list = None, use_web_search: bool 
     """Returns (generator, sources: list, meta: dict)."""
     context_docs, sources, distances = retrieve_context(query)
 
-    if not use_web_search and not is_context_confident(context_docs, distances):
+    if should_offer_web_search(query, context_docs, distances, use_web_search):
         def prompt_generator():
             yield WEB_SEARCH_PROMPT
         return prompt_generator(), [], {"web_search_suggested": True}
