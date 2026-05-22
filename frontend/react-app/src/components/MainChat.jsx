@@ -489,6 +489,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
     { text: "What is IPC 420?", icon: <Scale size={18} /> },
     { text: "How to file an FIR?", icon: <FileText size={18} /> },
     { text: "What are my rights after arrest?", icon: <ShieldAlert size={18} /> },
+    { text: "What are the fundamental rights in India?", icon: <ShieldAlert size={18} /> },
     { text: "Cybercrime punishment in India", icon: <AlertTriangle size={18} /> }
   ];
 

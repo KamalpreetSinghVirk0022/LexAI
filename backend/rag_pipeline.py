@@ -4,6 +4,7 @@ from groq import Groq
 import os
 from dotenv import load_dotenv
 import web_search
+from rights_knowledge import get_rights_context
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -274,6 +275,11 @@ def stream_answer(query: str, context_docs: list, history: list = None, context_
 def process_query(query: str, history: list = None, use_web_search: bool = False, target_language: str = "English") -> tuple:
     """Returns (answer: str, sources: list, meta: dict)."""
     context_docs, sources, distances = retrieve_context(query)
+    rights_context_docs = get_rights_context(query)
+    if rights_context_docs:
+        context_docs = rights_context_docs + context_docs
+        if not sources:
+            sources = [{"name": "Rights Guide", "page": ""}]
 
     if should_offer_web_search(query, context_docs, distances, use_web_search):
         return get_web_search_prompt(target_language), [], {"web_search_suggested": True}
@@ -296,6 +302,11 @@ def process_query(query: str, history: list = None, use_web_search: bool = False
 def process_query_stream(query: str, history: list = None, use_web_search: bool = False, target_language: str = "English") -> tuple:
     """Returns (generator, sources: list, meta: dict)."""
     context_docs, sources, distances = retrieve_context(query)
+    rights_context_docs = get_rights_context(query)
+    if rights_context_docs:
+        context_docs = rights_context_docs + context_docs
+        if not sources:
+            sources = [{"name": "Rights Guide", "page": ""}]
 
     if should_offer_web_search(query, context_docs, distances, use_web_search):
         def prompt_generator():

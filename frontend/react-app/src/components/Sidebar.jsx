@@ -98,6 +98,10 @@ export default function Sidebar({ currentChatId, setCurrentChatId, setExternalQu
     },
     { name: 'Constitution', subtopics: [] },
     { name: 'Consumer Rights', subtopics: [] },
+    {
+      name: 'Rights & Protections',
+      subtopics: ['Fundamental rights under the Constitution', 'What are my rights after arrest?', 'Women\'s legal rights in India', 'How to get free legal aid']
+    },
     { name: 'Family Law', subtopics: ['Divorce process and grounds', 'Child custody laws', 'Dowry prohibition laws', 'Succession and inheritance'] }
   ];
 

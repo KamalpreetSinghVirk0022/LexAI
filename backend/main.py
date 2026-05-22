@@ -11,6 +11,7 @@ import rag_pipeline
 import ocr
 import speech
 import pdf_parser
+from rights_knowledge import get_rights_topics
 
 app = FastAPI(title="Legal Advice Chatbot API")
 
@@ -61,6 +62,15 @@ class ChatResponse(BaseModel):
 
 class VoiceTranscribeResponse(BaseModel):
     transcript: str
+
+
+class RightsTopic(BaseModel):
+    id: str
+    title: str
+    subtitle: str
+    summary: str
+    details: List[str]
+    sample_questions: List[str]
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -180,7 +190,7 @@ async def followup_endpoint(request: FollowUpRequest):
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "You are a legal assistant. Generate exactly 3 short, relevant follow-up questions a user might ask after receiving the given legal answer. Return ONLY a JSON array of 3 question strings, nothing else. Example: [\"Question 1?\", \"Question 2?\", \"Question 3?\"]"},
+                {"role": "system", "content": "You are a legal assistant. Generate exactly 3 short, relevant follow-up questions a user might ask after receiving the given legal answer. When relevant, include awareness-oriented follow-ups about fundamental rights, rights after arrest, consumer rights, women's rights, or free legal aid. Return ONLY a JSON array of 3 question strings, nothing else. Example: [\"Question 1?\", \"Question 2?\", \"Question 3?\"]"},
                 {"role": "user", "content": f"Original question: {request.query}\n\nAnswer given: {request.last_answer[:500]}\n\nGenerate 3 follow-up questions as a JSON array."}
             ],
             temperature=0.7,
@@ -223,6 +233,11 @@ async def translate_endpoint(request: TranslateRequest):
         return TranslateResponse(translated_text=translated)
     except Exception as e:
         return TranslateResponse(translated_text=request.text)
+
+
+@app.get("/rights", response_model=List[RightsTopic])
+async def rights_endpoint():
+    return get_rights_topics()
 
 
 if __name__ == "__main__":
