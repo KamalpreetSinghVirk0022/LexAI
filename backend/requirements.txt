@@ -5,8 +5,6 @@ pytesseract
 groq
 pdfplumber
 python-multipart
-pandas
 pydantic
-pydantic-settings
 PyPDF2
 python-dotenv

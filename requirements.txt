@@ -4,7 +4,6 @@
 # Install with: pip install -r requirements.txt
 # Note: Also requires system-level installs:
 #   - Tesseract OCR  → https://github.com/UB-Mannheim/tesseract/wiki
-#   - FFmpeg         → https://ffmpeg.org/download.html
 # ============================================================
 
 # --- Web Framework & API Server ---
@@ -14,7 +13,6 @@ python-multipart>=0.0.9        # Required for FastAPI file uploads
 
 # --- Data Validation ---
 pydantic>=2.0.0
-pydantic-settings>=2.0.0
 
 # --- RAG / Vector Database ---
 chromadb>=0.5.0
@@ -22,10 +20,7 @@ sentence-transformers>=2.7.0   # Embedding model (all-MiniLM-L6-v2)
 tqdm>=4.66.0                   # Progress bars (build_vector_db.py)
 
 # --- LLM / AI APIs ---
-groq>=0.9.0                    # Groq API client (Llama 3.1)
-
-# --- Speech-to-Text ---
-openai-whisper>=20231117       # Whisper model for audio transcription
+groq>=0.9.0                    # Groq API client (Llama 3.1 & Whisper API)
 
 # --- OCR (Image Text Extraction) ---
 pytesseract>=0.3.10            # Python wrapper for Tesseract OCR
@@ -37,9 +32,3 @@ pdfplumber>=0.11.0             # Advanced PDF parsing (clean_data.py)
 
 # --- Environment Variables ---
 python-dotenv>=1.0.0           # Loads .env files
-
-# --- Supabase (Auth & Database) ---
-supabase>=2.4.0                # Supabase Python client
-
-# --- Data Processing ---
-pandas>=2.0.0                  # Data manipulation/analysis

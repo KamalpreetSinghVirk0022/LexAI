@@ -1,0 +1,82 @@
+<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="980" fill="#0B1020"/>
+  <rect x="0" y="0" width="300" height="980" fill="#121A2F"/>
+  <rect x="300" y="0" width="1300" height="72" fill="#121A2F"/>
+  <rect x="332" y="104" width="1240" height="220" rx="24" fill="#151D36"/>
+  <rect x="332" y="356" width="780" height="280" rx="20" fill="#121A2F"/>
+  <rect x="1140" y="356" width="432" height="280" rx="20" fill="#121A2F"/>
+  <rect x="332" y="668" width="380" height="248" rx="20" fill="#121A2F"/>
+  <rect x="732" y="668" width="380" height="248" rx="20" fill="#121A2F"/>
+  <rect x="1132" y="668" width="440" height="248" rx="20" fill="#121A2F"/>
+
+  <rect x="28" y="28" width="244" height="56" rx="18" fill="#5B4CF0"/>
+  <text x="60" y="63" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">+ New Query</text>
+
+  <circle cx="356" cy="36" r="18" fill="#5B4CF0" fill-opacity="0.18"/>
+  <text x="348" y="44" fill="#8E82FF" font-family="Arial, sans-serif" font-size="20" font-weight="700">⚖</text>
+  <text x="390" y="45" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="700">LexAI Dashboard</text>
+
+  <text x="40" y="142" fill="#93A0C4" font-family="Arial, sans-serif" font-size="18" font-weight="700">QUICK ACCESS</text>
+  <rect x="28" y="166" width="244" height="74" rx="18" fill="#1A2441"/>
+  <rect x="28" y="252" width="244" height="74" rx="18" fill="#1A2441"/>
+  <rect x="28" y="338" width="244" height="74" rx="18" fill="#1A2441"/>
+  <rect x="28" y="424" width="244" height="74" rx="18" fill="#1A2441"/>
+  <text x="52" y="210" fill="white" font-family="Arial, sans-serif" font-size="22">Fundamental Rights</text>
+  <text x="52" y="296" fill="white" font-family="Arial, sans-serif" font-size="22">Rights After Arrest</text>
+  <text x="52" y="382" fill="white" font-family="Arial, sans-serif" font-size="22">Consumer Help</text>
+  <text x="52" y="468" fill="white" font-family="Arial, sans-serif" font-size="22">Ask LexAI</text>
+
+  <text x="372" y="156" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="42" font-weight="700">Welcome back</text>
+  <text x="372" y="204" fill="#AAB5D8" font-family="Arial, sans-serif" font-size="22">Start with a rights guide, recent chat, or a quick legal action.</text>
+  <rect x="372" y="236" width="250" height="56" rx="18" fill="#5B4CF0"/>
+  <text x="430" y="271" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="700">Start New Chat</text>
+  <rect x="648" y="236" width="236" height="56" rx="18" fill="#222E53"/>
+  <text x="708" y="271" fill="#D5DCFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">Know Your Rights</text>
+
+  <rect x="1020" y="132" width="160" height="148" rx="18" fill="#1D2848"/>
+  <rect x="1200" y="132" width="160" height="148" rx="18" fill="#1D2848"/>
+  <rect x="1380" y="132" width="160" height="148" rx="18" fill="#1D2848"/>
+  <text x="1050" y="170" fill="#8FA2D8" font-family="Arial, sans-serif" font-size="18">Rights Topics</text>
+  <text x="1088" y="228" fill="white" font-family="Arial, sans-serif" font-size="46" font-weight="700">5</text>
+  <text x="1230" y="170" fill="#8FA2D8" font-family="Arial, sans-serif" font-size="18">Recent Chats</text>
+  <text x="1272" y="228" fill="white" font-family="Arial, sans-serif" font-size="46" font-weight="700">12</text>
+  <text x="1415" y="170" fill="#8FA2D8" font-family="Arial, sans-serif" font-size="18">Saved Docs</text>
+  <text x="1454" y="228" fill="white" font-family="Arial, sans-serif" font-size="46" font-weight="700">3</text>
+
+  <text x="364" y="396" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">Rights Overview</text>
+  <text x="364" y="430" fill="#8FA2D8" font-family="Arial, sans-serif" font-size="18">Learn the basics before you start asking detailed legal questions.</text>
+  <rect x="364" y="462" width="716" height="54" rx="14" fill="#192445"/>
+  <rect x="364" y="530" width="716" height="54" rx="14" fill="#192445"/>
+  <rect x="364" y="598" width="716" height="18" rx="9" fill="#26345C"/>
+  <rect x="380" y="480" width="20" height="20" rx="10" fill="#30C48D"/>
+  <rect x="380" y="548" width="20" height="20" rx="10" fill="#6C63FF"/>
+  <text x="418" y="495" fill="white" font-family="Arial, sans-serif" font-size="21">Fundamental Rights under the Constitution</text>
+  <text x="418" y="563" fill="white" font-family="Arial, sans-serif" font-size="21">What to do if your rights are violated</text>
+
+  <text x="1168" y="396" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">Recent Activity</text>
+  <rect x="1168" y="438" width="376" height="54" rx="14" fill="#192445"/>
+  <rect x="1168" y="506" width="376" height="54" rx="14" fill="#192445"/>
+  <rect x="1168" y="574" width="376" height="54" rx="14" fill="#192445"/>
+  <text x="1192" y="472" fill="white" font-family="Arial, sans-serif" font-size="19">How to file an FIR</text>
+  <text x="1192" y="540" fill="white" font-family="Arial, sans-serif" font-size="19">Consumer complaint for defective laptop</text>
+  <text x="1192" y="608" fill="white" font-family="Arial, sans-serif" font-size="19">Rights after arrest</text>
+
+  <text x="364" y="708" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700">Quick Actions</text>
+  <rect x="364" y="744" width="316" height="70" rx="18" fill="#1A2441"/>
+  <rect x="364" y="828" width="316" height="70" rx="18" fill="#1A2441"/>
+  <text x="392" y="787" fill="white" font-family="Arial, sans-serif" font-size="22">Ask about arrest rights</text>
+  <text x="392" y="871" fill="white" font-family="Arial, sans-serif" font-size="22">Check legal aid eligibility</text>
+
+  <text x="764" y="708" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700">Trending Topics</text>
+  <rect x="764" y="744" width="316" height="70" rx="18" fill="#1A2441"/>
+  <rect x="764" y="828" width="316" height="70" rx="18" fill="#1A2441"/>
+  <text x="792" y="787" fill="white" font-family="Arial, sans-serif" font-size="22">Women’s safety protections</text>
+  <text x="792" y="871" fill="white" font-family="Arial, sans-serif" font-size="22">Cyber fraud complaint steps</text>
+
+  <text x="1164" y="708" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="700">Insight Card</text>
+  <rect x="1164" y="744" width="376" height="154" rx="20" fill="#1B284A"/>
+  <text x="1192" y="790" fill="#91A2D9" font-family="Arial, sans-serif" font-size="18">Today’s highlight</text>
+  <text x="1192" y="836" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">Article 21</text>
+  <text x="1192" y="872" fill="#D6DDFF" font-family="Arial, sans-serif" font-size="20">Right to life and personal liberty</text>
+  <text x="1192" y="905" fill="#91A2D9" font-family="Arial, sans-serif" font-size="17">Plain-language explainers and practical next steps.</text>
+</svg>

@@ -1,0 +1,100 @@
+<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="980" fill="#0A1020"/>
+  <rect x="0" y="0" width="292" height="980" fill="#121A2F"/>
+  <rect x="292" y="0" width="1308" height="72" fill="#121A2F"/>
+
+  <rect x="24" y="28" width="244" height="56" rx="18" fill="#5B4CF0"/>
+  <text x="57" y="63" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">+ New Query</text>
+
+  <text x="36" y="138" fill="#91A1C9" font-family="Arial, sans-serif" font-size="18" font-weight="700">NAVIGATION</text>
+  <rect x="24" y="164" width="244" height="70" rx="18" fill="#1A2441"/>
+  <rect x="24" y="246" width="244" height="70" rx="18" fill="#1A2441"/>
+  <rect x="24" y="328" width="244" height="70" rx="18" fill="#1A2441"/>
+  <rect x="24" y="410" width="244" height="70" rx="18" fill="#1A2441"/>
+  <rect x="24" y="492" width="244" height="70" rx="18" fill="#1A2441"/>
+  <text x="48" y="208" fill="white" font-family="Arial, sans-serif" font-size="22">Dashboard</text>
+  <text x="48" y="290" fill="white" font-family="Arial, sans-serif" font-size="22">Fundamental Rights</text>
+  <text x="48" y="372" fill="white" font-family="Arial, sans-serif" font-size="22">Recent Chats</text>
+  <text x="48" y="454" fill="white" font-family="Arial, sans-serif" font-size="22">Uploaded Docs</text>
+  <text x="48" y="536" fill="white" font-family="Arial, sans-serif" font-size="22">Legal Trends</text>
+
+  <circle cx="348" cy="36" r="18" fill="#5B4CF0" fill-opacity="0.18"/>
+  <text x="340" y="44" fill="#8E82FF" font-family="Arial, sans-serif" font-size="20" font-weight="700">⚖</text>
+  <text x="382" y="45" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="700">LexAI Intelligence Dashboard</text>
+
+  <rect x="324" y="100" width="1250" height="172" rx="24" fill="#141C35"/>
+  <text x="360" y="152" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">Welcome back</text>
+  <text x="360" y="198" fill="#AEB9DA" font-family="Arial, sans-serif" font-size="22">A more visual home screen with rights education, analytics, and guided actions.</text>
+  <rect x="360" y="222" width="230" height="54" rx="18" fill="#5B4CF0"/>
+  <rect x="606" y="222" width="236" height="54" rx="18" fill="#202C50"/>
+  <text x="414" y="256" fill="white" font-family="Arial, sans-serif" font-size="23" font-weight="700">Start Chat</text>
+  <text x="655" y="256" fill="#D8DEFF" font-family="Arial, sans-serif" font-size="23" font-weight="700">Know Your Rights</text>
+
+  <rect x="1100" y="124" width="130" height="124" rx="18" fill="#1C2748"/>
+  <rect x="1246" y="124" width="130" height="124" rx="18" fill="#1C2748"/>
+  <rect x="1392" y="124" width="130" height="124" rx="18" fill="#1C2748"/>
+  <text x="1120" y="158" fill="#8EA0D6" font-family="Arial, sans-serif" font-size="16">Rights</text>
+  <text x="1150" y="210" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">5</text>
+  <text x="1263" y="158" fill="#8EA0D6" font-family="Arial, sans-serif" font-size="16">Chats</text>
+  <text x="1290" y="210" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">12</text>
+  <text x="1408" y="158" fill="#8EA0D6" font-family="Arial, sans-serif" font-size="16">Docs</text>
+  <text x="1438" y="210" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">3</text>
+
+  <rect x="324" y="298" width="616" height="300" rx="22" fill="#121A2F"/>
+  <text x="356" y="340" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">User Activity Trend</text>
+  <text x="356" y="372" fill="#90A0C8" font-family="Arial, sans-serif" font-size="17">Animated line chart could show daily questions, learning sessions, or document analysis usage.</text>
+  <line x1="374" y1="548" x2="892" y2="548" stroke="#314267" stroke-width="2"/>
+  <line x1="374" y1="508" x2="892" y2="508" stroke="#22304D" stroke-width="1"/>
+  <line x1="374" y1="468" x2="892" y2="468" stroke="#22304D" stroke-width="1"/>
+  <line x1="374" y1="428" x2="892" y2="428" stroke="#22304D" stroke-width="1"/>
+  <line x1="374" y1="388" x2="892" y2="388" stroke="#22304D" stroke-width="1"/>
+  <path d="M390 520C440 504 470 430 525 440C580 450 615 400 665 410C715 420 760 350 820 364C848 370 868 344 892 332" stroke="#6C63FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M390 528C445 538 485 492 536 500C590 508 642 462 688 470C736 478 790 430 842 438C866 442 880 426 892 418" stroke="#2DD4BF" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10"/>
+  <circle cx="892" cy="332" r="7" fill="#6C63FF"/>
+  <circle cx="892" cy="418" r="6" fill="#2DD4BF"/>
+  <text x="378" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Mon</text>
+  <text x="474" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Tue</text>
+  <text x="570" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Wed</text>
+  <text x="666" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Thu</text>
+  <text x="762" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Fri</text>
+  <text x="856" y="575" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Sat</text>
+
+  <rect x="964" y="298" width="610" height="300" rx="22" fill="#121A2F"/>
+  <text x="996" y="340" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="700">Most Asked Legal Topics</text>
+  <text x="996" y="372" fill="#90A0C8" font-family="Arial, sans-serif" font-size="17">Animated bars can highlight what users explore most often.</text>
+  <rect x="1032" y="540" width="82" height="28" rx="8" fill="#5B4CF0"/>
+  <rect x="1164" y="494" width="82" height="74" rx="8" fill="#7C73FF"/>
+  <rect x="1296" y="434" width="82" height="134" rx="8" fill="#9D97FF"/>
+  <rect x="1428" y="398" width="82" height="170" rx="8" fill="#B7B2FF"/>
+  <text x="1018" y="598" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Rights</text>
+  <text x="1152" y="598" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Arrest</text>
+  <text x="1270" y="598" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Consumer</text>
+  <text x="1410" y="598" fill="#7D90BC" font-family="Arial, sans-serif" font-size="15">Cyber</text>
+
+  <rect x="324" y="626" width="398" height="310" rx="22" fill="#121A2F"/>
+  <text x="356" y="668" fill="white" font-family="Arial, sans-serif" font-size="27" font-weight="700">Rights Guide</text>
+  <rect x="356" y="700" width="334" height="62" rx="16" fill="#192445"/>
+  <rect x="356" y="776" width="334" height="62" rx="16" fill="#192445"/>
+  <rect x="356" y="852" width="334" height="62" rx="16" fill="#192445"/>
+  <text x="382" y="736" fill="white" font-family="Arial, sans-serif" font-size="21">Fundamental Rights</text>
+  <text x="382" y="812" fill="white" font-family="Arial, sans-serif" font-size="21">Rights After Arrest</text>
+  <text x="382" y="888" fill="white" font-family="Arial, sans-serif" font-size="21">Free Legal Aid</text>
+
+  <rect x="748" y="626" width="406" height="310" rx="22" fill="#121A2F"/>
+  <text x="780" y="668" fill="white" font-family="Arial, sans-serif" font-size="27" font-weight="700">Quick Actions</text>
+  <rect x="780" y="700" width="342" height="70" rx="18" fill="#1A2441"/>
+  <rect x="780" y="786" width="342" height="70" rx="18" fill="#1A2441"/>
+  <rect x="780" y="872" width="342" height="42" rx="14" fill="#5B4CF0"/>
+  <text x="808" y="744" fill="white" font-family="Arial, sans-serif" font-size="21">Teach me my constitutional rights</text>
+  <text x="808" y="830" fill="white" font-family="Arial, sans-serif" font-size="21">Check eligibility for legal aid</text>
+  <text x="884" y="900" fill="white" font-family="Arial, sans-serif" font-size="18" font-weight="700">Open Learning Dashboard</text>
+
+  <rect x="1180" y="626" width="394" height="310" rx="22" fill="#121A2F"/>
+  <text x="1212" y="668" fill="white" font-family="Arial, sans-serif" font-size="27" font-weight="700">Recent Activity</text>
+  <rect x="1212" y="700" width="330" height="58" rx="16" fill="#192445"/>
+  <rect x="1212" y="772" width="330" height="58" rx="16" fill="#192445"/>
+  <rect x="1212" y="844" width="330" height="58" rx="16" fill="#192445"/>
+  <text x="1238" y="736" fill="white" font-family="Arial, sans-serif" font-size="19">What are my rights after arrest?</text>
+  <text x="1238" y="808" fill="white" font-family="Arial, sans-serif" font-size="19">Cyber fraud complaint steps</text>
+  <text x="1238" y="880" fill="white" font-family="Arial, sans-serif" font-size="19">Document analysis: rental agreement</text>
+</svg>
