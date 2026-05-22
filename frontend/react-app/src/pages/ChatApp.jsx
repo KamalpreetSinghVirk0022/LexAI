@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MainChat from '../components/MainChat';
 import RightPanel from '../components/RightPanel';
-import { Scale, HelpCircle, Sun, Moon, LogOut } from 'lucide-react';
+import DashboardHome from '../components/DashboardHome';
+import { Scale, Sun, Moon, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -11,6 +12,7 @@ export default function ChatApp() {
   const [theme, setTheme] = useState('dark');
   const [externalQuery, setExternalQuery] = useState(null);
   const navigate = useNavigate();
+  const showDashboard = !currentChatId && !externalQuery;
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -73,16 +75,25 @@ export default function ChatApp() {
 
         {/* Workspace Layout */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Center Chat Panel */}
-          <MainChat 
-            currentChatId={currentChatId} 
-            setCurrentChatId={setCurrentChatId} 
-            externalQuery={externalQuery}
-            setExternalQuery={setExternalQuery}
-          />
+          {showDashboard ? (
+            <DashboardHome
+              setCurrentChatId={setCurrentChatId}
+              setExternalQuery={setExternalQuery}
+            />
+          ) : (
+            <>
+              {/* Center Chat Panel */}
+              <MainChat 
+                currentChatId={currentChatId} 
+                setCurrentChatId={setCurrentChatId} 
+                externalQuery={externalQuery}
+                setExternalQuery={setExternalQuery}
+              />
 
-          {/* Right Reference Panel */}
-          <RightPanel setExternalQuery={setExternalQuery} />
+              {/* Right Reference Panel */}
+              <RightPanel setExternalQuery={setExternalQuery} />
+            </>
+          )}
         </div>
       </div>
     </div>
