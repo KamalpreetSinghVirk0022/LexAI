@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Search } from 'lucide-react';
+import { Send, Mic, Scale, Loader2, Paperclip, FileText, ShieldAlert, Pin, AlertTriangle, Volume2, VolumeX, X, Image as ImageIcon, Download, BookOpen, Search, Languages } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -7,21 +7,35 @@ import GlossaryText from './GlossaryText';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const WEB_SEARCH_PROMPT_HINT = 'would you like me to search the web';
+const LANGUAGE_OPTIONS = [
+  { label: 'English', speechCode: 'en-IN', voiceCode: 'en-IN' },
+  { label: 'Hindi', speechCode: 'hi-IN', voiceCode: 'hi-IN' },
+  { label: 'Bengali', speechCode: 'bn-IN', voiceCode: 'bn-IN' },
+  { label: 'Gujarati', speechCode: 'gu-IN', voiceCode: 'gu-IN' },
+  { label: 'Marathi', speechCode: 'mr-IN', voiceCode: 'mr-IN' },
+  { label: 'Punjabi', speechCode: 'pa-IN', voiceCode: 'pa-IN' },
+  { label: 'Tamil', speechCode: 'ta-IN', voiceCode: 'ta-IN' },
+  { label: 'Telugu', speechCode: 'te-IN', voiceCode: 'te-IN' },
+  { label: 'Kannada', speechCode: 'kn-IN', voiceCode: 'kn-IN' },
+  { label: 'Malayalam', speechCode: 'ml-IN', voiceCode: 'ml-IN' }
+];
+const DEFAULT_LANGUAGE = LANGUAGE_OPTIONS[0].label;
+const LANGUAGE_STORAGE_KEY = 'lexai-preferred-language';
 
 export default function MainChat({ currentChatId, setCurrentChatId, externalQuery, setExternalQuery }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribingVoice, setIsTranscribingVoice] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
+  const [preferredLanguage, setPreferredLanguage] = useState(() => localStorage.getItem(LANGUAGE_STORAGE_KEY) || DEFAULT_LANGUAGE);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const { user } = useAuth();
-
-  // Initialize SpeechRecognition if available
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   useEffect(() => {
     if (currentChatId) {
@@ -59,11 +73,46 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
   }, [messages]);
 
   useEffect(() => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, preferredLanguage);
+  }, [preferredLanguage]);
+
+  useEffect(() => {
     if (externalQuery) {
       handleSend(externalQuery);
       setExternalQuery(null);
     }
   }, [externalQuery]);
+
+  const getLanguageConfig = () => {
+    return LANGUAGE_OPTIONS.find((option) => option.label === preferredLanguage) || LANGUAGE_OPTIONS[0];
+  };
+
+  const translateText = async (text, targetLanguage) => {
+    if (!text || targetLanguage === DEFAULT_LANGUAGE) {
+      return text;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          target_language: targetLanguage
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Translation request failed');
+      }
+
+      const data = await response.json();
+      return data.translated_text || text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  };
 
   const handleSend = async (forcedMessage = null, options = {}) => {
     const userMessage = forcedMessage || input.trim();
@@ -71,7 +120,10 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
     if (!userMessage || isLoading || !user) return;
 
     if (!forcedMessage) setInput('');
-    if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); }
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+    }
 
     setMessages(prev => [...prev, { role: 'user', content: displayMessage, type: 'text' }]);
     setIsLoading(true);
@@ -99,7 +151,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         body: JSON.stringify({
           query: userMessage,
           history: historyToSent,
-          use_web_search: Boolean(options.useWebSearch)
+          use_web_search: Boolean(options.useWebSearch),
+          target_language: preferredLanguage
         })
       });
 
@@ -156,10 +209,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         }
       }
 
-      // Save completed message to DB
-      await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
-
       if (responseMeta.web_search_suggested) {
+        await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1 ? {
             ...m,
@@ -172,6 +223,8 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         return;
       }
 
+      await supabase.from('messages').insert({ chat_id: chatIdToUse, role: 'assistant', content: fullText });
+
       // --- Parallel: fetch follow-ups ---
       let followUps = [];
 
@@ -182,6 +235,9 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
           body: JSON.stringify({ query: userMessage, last_answer: fullText })
         }).then(r => r.json());
         followUps = fuResult?.questions || [];
+        if (preferredLanguage !== DEFAULT_LANGUAGE && followUps.length > 0) {
+          followUps = await Promise.all(followUps.map((question) => translateText(question, preferredLanguage)));
+        }
       } catch (e) {
         console.error("Error fetching followups:", e);
       }
@@ -310,14 +366,15 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         body: formData
       });
       const data = await response.json();
+      const translatedAnswer = await translateText(data.answer, preferredLanguage);
 
       await supabase.from('messages').insert({
         chat_id: chatIdToUse,
         role: 'assistant',
-        content: data.answer
+        content: translatedAnswer
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.answer, type: 'text' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: translatedAnswer, type: 'text' }]);
     } catch (error) {
       console.error("File processing error:", error);
       setMessages(prev => [...prev, { role: 'assistant', content: 'Error processing document.', type: 'error' }]);
@@ -329,45 +386,81 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
   const toggleRecording = () => {
     if (isRecording) {
-      recognitionRef.current?.stop();
+      mediaRecorderRef.current?.stop();
       setIsRecording(false);
     } else {
-      if (!SpeechRecognition) {
-        alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        alert("Your browser does not support audio recording. Please use Chrome or Edge.");
         return;
       }
-      
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-IN'; // Indian English
 
-      let finalTranscript = input ? input + ' ' : '';
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : MediaRecorder.isTypeSupported('audio/mp4')
+              ? 'audio/mp4'
+              : '';
+          const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+          audioChunksRef.current = [];
 
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        setInput(finalTranscript + interimTranscript);
-      };
+          recorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunksRef.current.push(event.data);
+            }
+          };
 
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error", event.error);
-        setIsRecording(false);
-      };
+          recorder.onerror = (event) => {
+            console.error('Audio recording error', event.error);
+            setIsRecording(false);
+            stream.getTracks().forEach((track) => track.stop());
+          };
 
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
+          recorder.onstop = async () => {
+            stream.getTracks().forEach((track) => track.stop());
+            const blobType = recorder.mimeType || 'audio/webm';
+            const extension = blobType.includes('mp4') ? 'mp4' : 'webm';
+            const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
 
-      recognition.start();
-      recognitionRef.current = recognition;
-      setIsRecording(true);
+            if (!audioBlob.size) {
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', audioBlob, `voice-input.${extension}`);
+
+            setIsTranscribingVoice(true);
+            try {
+              const response = await fetch(`${API_BASE_URL}/voice/transcribe`, {
+                method: 'POST',
+                body: formData
+              });
+
+              if (!response.ok) {
+                throw new Error('Voice transcription failed');
+              }
+
+              const data = await response.json();
+              const transcript = data.transcript?.trim();
+              if (transcript) {
+                setInput((prev) => prev ? `${prev} ${transcript}` : transcript);
+              }
+            } catch (error) {
+              console.error('Voice transcription error:', error);
+              alert('Could not transcribe your audio. Please try again.');
+            } finally {
+              setIsTranscribingVoice(false);
+            }
+          };
+
+          recorder.start();
+          mediaRecorderRef.current = recorder;
+          setIsRecording(true);
+        })
+        .catch((error) => {
+          console.error('Microphone access error:', error);
+          alert('Microphone access was blocked or unavailable. Please allow microphone permission and try again.');
+        });
     }
   };
 
@@ -381,7 +474,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         // Play new message
         window.speechSynthesis.cancel(); // Stop any ongoing speech
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-IN';
+        utterance.lang = getLanguageConfig().voiceCode;
         utterance.onend = () => setSpeakingIdx(null);
         utterance.onerror = () => setSpeakingIdx(null);
         window.speechSynthesis.speak(utterance);
@@ -402,22 +495,38 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-bg-primary relative transition-colors duration-300">
       
-      {/* Sticky Toolbar - Only show when there are messages */}
-      {messages.length > 0 && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-bg-primary/80 backdrop-blur-md border-b border-border-color px-4 sm:px-8 py-3 flex justify-end items-center shadow-sm">
-          <button
-            onClick={exportChatAsPdf}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all bg-bg-panel"
-            title="Export consultation as PDF"
-          >
-            <Download size={13} />
-            Export PDF
-          </button>
+      {/* Sticky Toolbar */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-bg-primary/80 backdrop-blur-md border-b border-border-color px-4 sm:px-8 py-3 flex justify-end items-center gap-3 shadow-sm">
+          <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary border border-border-color rounded-lg bg-bg-panel">
+            <Languages size={13} />
+            <span className="hidden sm:inline">Response Language</span>
+            <select
+              value={preferredLanguage}
+              onChange={(e) => setPreferredLanguage(e.target.value)}
+              className="bg-transparent text-text-primary outline-none min-w-[96px]"
+              title="Select response and voice language"
+            >
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.label} value={option.label} className="text-slate-900">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {messages.length > 0 && (
+            <button
+              onClick={exportChatAsPdf}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:bg-primary/10 border border-border-color rounded-lg transition-all bg-bg-panel"
+              title="Export consultation as PDF"
+            >
+              <Download size={13} />
+              Export PDF
+            </button>
+          )}
         </div>
-      )}
 
       {/* Chat Messages Area */}
-      <div className={`flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-8 pb-32 ${messages.length > 0 ? 'pt-20' : 'py-6'}`}>
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-8 pt-20 pb-32">
         {messages.length === 0 ? (
           /* Welcome Screen */
           <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto w-full animate-fade-in mt-10">
@@ -618,12 +727,15 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
 
           <button 
             onClick={toggleRecording}
+            disabled={isTranscribingVoice}
             className={`p-3 rounded-xl transition-colors ${
               isRecording 
                 ? 'bg-red-500/20 text-red-500 animate-pulse' 
-                : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
+                : isTranscribingVoice
+                  ? 'bg-primary/10 text-primary cursor-wait'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
             }`}
-            title="Real-time Voice Dictation"
+            title={isRecording ? 'Stop Recording' : isTranscribingVoice ? 'Transcribing audio...' : 'Record Voice Input'}
           >
             <Mic size={20} />
           </button>
@@ -648,7 +760,7 @@ export default function MainChat({ currentChatId, setCurrentChatId, externalQuer
         
         <div className="text-center mt-3 hidden sm:block">
            <span className="text-[11px] text-text-secondary transition-colors">
-             Shift + Enter for new line • Enter to send
+             {isRecording ? 'Recording... click the mic again to stop and transcribe.' : isTranscribingVoice ? 'Transcribing your audio...' : 'Shift + Enter for new line • Enter to send'}
            </span>
         </div>
       </div>

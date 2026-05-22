@@ -48,6 +48,7 @@ class ChatRequest(BaseModel):
     query: str
     history: Optional[List[Message]] = []
     use_web_search: bool = False
+    target_language: str = "English"
 
 class Source(BaseModel):
     name: str
@@ -56,6 +57,10 @@ class Source(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: Optional[List[Source]] = []
+
+
+class VoiceTranscribeResponse(BaseModel):
+    transcript: str
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -68,7 +73,8 @@ async def chat_endpoint(request: ChatRequest):
     answer, sources, _meta = rag_pipeline.process_query(
         request.query,
         history=history_dicts,
-        use_web_search=request.use_web_search
+        use_web_search=request.use_web_search,
+        target_language=request.target_language
     )
     return ChatResponse(answer=answer, sources=[Source(**s) for s in sources])
 
@@ -83,7 +89,8 @@ async def chat_stream_endpoint(request: ChatRequest):
     generator, sources, meta = rag_pipeline.process_query_stream(
         request.query,
         history=history_dicts,
-        use_web_search=request.use_web_search
+        use_web_search=request.use_web_search,
+        target_language=request.target_language
     )
 
     def event_stream():
@@ -121,6 +128,15 @@ async def voice_endpoint(file: UploadFile = File(...)):
         
     answer, sources, _meta = rag_pipeline.process_query(query)
     return ChatResponse(answer=f"[Transcribed]: {query}\n\n{answer}", sources=[Source(**s) for s in sources])
+
+
+@app.post("/voice/transcribe", response_model=VoiceTranscribeResponse)
+async def voice_transcribe_endpoint(file: UploadFile = File(...)):
+    audio_bytes = await file.read()
+    transcript = speech.transcribe_audio(audio_bytes, file.filename)
+    if not transcript:
+        raise HTTPException(status_code=400, detail="Could not transcribe audio.")
+    return VoiceTranscribeResponse(transcript=transcript)
 
 
 @app.post("/image", response_model=ChatResponse)
